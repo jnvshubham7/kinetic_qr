@@ -1,13 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:async';
-
-
-bool isHarmfulUrl(String url) {
-  List<String> harmfulKeywords = ['phishing', 'malware', 'danger', 'fake', 'scam'];
-  return harmfulKeywords.any((keyword) => url.contains(keyword));
-}
 
 class ScanQRScreen extends StatefulWidget {
   @override
@@ -17,16 +10,16 @@ class ScanQRScreen extends StatefulWidget {
 class _ScanQRScreenState extends State<ScanQRScreen> with TickerProviderStateMixin {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   QRViewController? controller;
-  String qrText = '';
-  bool isScanning = true;
-
+  String? qrText; // To hold the final result
+  bool isScanning = true; // Flag to check if scanning is in progress
+  bool isResultAvailable = false; // To track if a result is available
   late AnimationController _animationController;
 
   @override
   void initState() {
     super.initState();
 
-    // Initialize the animation controller for the scanning line
+    // Animation for scanning line
     _animationController = AnimationController(
       vsync: this,
       duration: Duration(seconds: 2),
@@ -38,119 +31,147 @@ class _ScanQRScreenState extends State<ScanQRScreen> with TickerProviderStateMix
     return Scaffold(
       appBar: AppBar(title: Text('Scan QR Code')),
       body: Stack(
-        children: <Widget>[
-          Column(
-            children: <Widget>[
-              Expanded(
-                flex: 5,
-                child: Stack(
-                  children: [
-                    QRView(
-                      key: qrKey,
-                      onQRViewCreated: _onQRViewCreated,
-                    ),
-                  
-                    Positioned.fill(
-                      child: Align(
-                        alignment: Alignment.center,
-                        child: AnimatedBuilder(
-                          animation: _animationController,
-                          builder: (context, child) {
-                            return Transform.translate(
-                              offset: Offset(0, _animationController.value * 200 - 100),
-                              child: Container(
-                                height: 2,
-                                width: double.infinity,
-                                color: Colors.red,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                flex: 1,
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (isScanning) ...[
+            Column(
+              children: <Widget>[
+                Expanded(
+                  flex: 5,
+                  child: Stack(
                     children: [
-                      Text('Result: $qrText'),
-                      SizedBox(height: 10),
-                      if (Uri.tryParse(qrText)?.hasAbsolutePath ?? false)
-                        ElevatedButton(
-                          onPressed: () async {
-                            if (isHarmfulUrl(qrText)) {
-                             
-                              _showHarmfulUrlWarning(context);
-                            } else if (await canLaunch(qrText)) {
-                              await launch(qrText);
-                            }
-                          },
-                          child: Text(isHarmfulUrl(qrText)
-                              ? 'Warning: Harmful URL'
-                              : 'Open in Browser'),
-                          style: ButtonStyle(
-                            backgroundColor: isHarmfulUrl(qrText)
-                                ? MaterialStateProperty.all(Colors.red)
-                                : MaterialStateProperty.all(Colors.blue),
+                      QRView(
+                        key: qrKey,
+                        onQRViewCreated: _onQRViewCreated,
+                      ),
+                      // Scanning animation: a red line moving up and down
+                      Positioned.fill(
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: AnimatedBuilder(
+                            animation: _animationController,
+                            builder: (context, child) {
+                              return Transform.translate(
+                                offset: Offset(0, _animationController.value * 200 - 100),
+                                child: Container(
+                                  height: 2,
+                                  width: double.infinity,
+                                  color: Colors.red,
+                                ),
+                              );
+                            },
                           ),
                         ),
+                      ),
                     ],
                   ),
                 ),
-              ),
-            ],
-          ),
-          if (!isScanning)
-            Center(
-              child: CircularProgressIndicator(),
+                Expanded(
+                  flex: 1,
+                  child: Center(
+                    child: Text(
+                      'Scanning for QR code...',
+                      style: TextStyle(fontSize: 18, color: Colors.grey),
+                    ),
+                  ),
+                ),
+              ],
             ),
+          ] else if (isResultAvailable) ...[
+            _buildResultView(), // Show the result in a well-formatted view
+          ],
         ],
       ),
     );
   }
 
+  // Method to handle QR View creation and scanning
   void _onQRViewCreated(QRViewController controller) {
     this.controller = controller;
     controller.scannedDataStream.listen((scanData) {
-      setState(() {
-        isScanning = false; 
-        qrText = scanData.code ?? '';
-      });
+      if (!isResultAvailable) {
+        // Stop the scanning and process the first result
+        setState(() {
+          isScanning = false;
+          isResultAvailable = true;
+          qrText = scanData.code;
+        });
+
+        // Stop camera preview to avoid further scanning
+        controller.pauseCamera();
+      }
     });
   }
 
-  void _showHarmfulUrlWarning(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Warning'),
-          content: Text(
-              'This QR code leads to a potentially harmful website. Proceed with caution.'),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+  // Build the view to display QR code result
+  Widget _buildResultView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 4,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Scanned Result:',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 10),
+                if (qrText != null && Uri.tryParse(qrText!)?.hasAbsolutePath == true) ...[
+                  Text(
+                    qrText!,
+                    style: TextStyle(fontSize: 18, color: Colors.blue),
+                    softWrap: true,
+                  ),
+                  SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: () async {
+                      if (await canLaunch(qrText!)) {
+                        await launch(qrText!);
+                      } else {
+                        _showSnackBar(context, "Could not open the link.");
+                      }
+                    },
+                    child: Text('Open Link'),
+                  ),
+                ] else if (qrText != null) ...[
+                  Text(
+                    qrText!,
+                    style: TextStyle(fontSize: 18, color: Colors.black),
+                    softWrap: true,
+                  ),
+                ],
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    // Restart scanning
+                    setState(() {
+                      isResultAvailable = false;
+                      isScanning = true;
+                      qrText = null;
+                    });
+                    controller?.resumeCamera();
+                  },
+                  child: Text('Scan Again'),
+                ),
+              ],
             ),
-            TextButton(
-              child: Text('Proceed'),
-              onPressed: () async {
-                if (await canLaunch(qrText)) {
-                  await launch(qrText);
-                }
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
+          ),
+        ),
+      ),
     );
+  }
+
+  // Helper to show snackbar messages
+  void _showSnackBar(BuildContext context, String message) {
+    final snackBar = SnackBar(content: Text(message));
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   @override
