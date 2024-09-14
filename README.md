@@ -1,24 +1,69 @@
+# KineticQR
 
-# kineticQR
+## Overview
 
-## Description
-
-A Flutter application for scanning and generating QR codes. The app provides a clean and easy-to-use interface for both Android and iOS platforms.
+KineticQR is a Flutter application designed to simplify the process of scanning and generating QR codes. The app provides a user-friendly interface for both Android and iOS devices, allowing you to effortlessly handle QR codes for various purposes.
 
 ## Features
 
-- Scan QR codes and display the scanned information.
-- Generate custom QR codes from text, URLs, contact info, and Wi-Fi details.
-- Export and share QR codes.
-- Dark mode support.
+- **QR Code Scanning**: Quickly scan and decode QR codes to access the embedded information.
+- **QR Code Generation**: Create QR codes from text, URLs, contact details, and Wi-Fi settings with ease.
+- **Export and Share**: Save and share your generated QR codes in different formats.
+- **Dark Mode Support**: Switch to dark mode for a better experience in low-light conditions.
 
-## How to run
+## Installation and Setup
 
-1. Clone the repository.
-2. Run `flutter pub get` to install the dependencies.
-3. Use `flutter run` to build and run the app on your preferred device.
+### Prerequisites
 
-## Bonus
+- [Flutter](https://flutter.dev/docs/get-started/install) installed on your machine.
+- [Dart](https://dart.dev/get-dart) SDK installed (comes with Flutter).
+- [Xcode](https://developer.apple.com/xcode/) installed for iOS development (macOS only).
 
-- Dark mode
-- Animations can be added for better user experience when scanning and generating QR codes.
+### Running the App
+
+1. **Clone the Repository**
+
+   ```bash
+   git clone https://github.com/jnvshubham7/kinetic_qr.git
+   ```
+2. **Navigate to the Project Directory**
+
+   ```bash
+   cd kinetic_qr
+   ```
+3. **Install Dependencies**
+
+   ```bash
+   flutter pub get
+   ```
+4. **Run the App**
+
+   ```bash
+   flutter run
+   ```
+
+## Building the App
+
+- **For Android**
+
+  ```bash
+  flutter build apk
+  ```
+
+  To create a release APK:
+
+  ```bash
+  flutter build apk --release
+  ```
+- **For iOS**
+
+  ```bash
+  flutter build ios
+  ```
+
+  Make sure you have Xcode configured for iOS builds.
+
+## Additional Features
+
+- **Dark Mode**: Easily switch to dark mode for a more comfortable viewing experience in low light.
+- **Animations**: Add animations to enhance user interactions when scanning and generating QR codes.
