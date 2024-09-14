@@ -16,6 +16,10 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
   final TextEditingController _emailController = TextEditingController();
 
   final TextEditingController _textController = TextEditingController();
+
+
+  late Brightness brightness;
+
   String qrData = '';
   String selectedType = 'Text';
   final List<String> dataTypes = ['URL', 'Text', 'vCard', 'Wi-Fi'];
@@ -25,8 +29,13 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
 
   @override
   Widget build(BuildContext context) {
+    brightness = Theme.of(context).brightness;
+
+    final qrColor = brightness == Brightness.dark ? Colors.white : Colors.black;
+final qrBackgroundColor = brightness == Brightness.dark ? Colors.black : Colors.white;
+
     return Scaffold(
-      appBar: AppBar(title: Text('Generate QR Code')),
+      appBar: AppBar(title: const Text('Generate QR Code')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -51,35 +60,33 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
             if (selectedType == 'Wi-Fi') ...[
               TextField(
                 controller: _ssidController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Wi-Fi SSID',
                 ),
               ),
               TextField(
                 controller: _passwordController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Wi-Fi Password',
                 ),
               ),
             ] else if (selectedType == 'vCard') ...[
-              // For simplicity, using a single input for vCard. In a full app, you'd have multiple inputs.
-
               TextField(
                 controller: _fullNameController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Full Name',
                 ),
               ),
               TextField(
                 controller: _phoneController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Phone Number',
                 ),
                 keyboardType: TextInputType.phone,
               ),
               TextField(
                 controller: _emailController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Email Address',
                 ),
                 keyboardType: TextInputType.emailAddress,
@@ -87,41 +94,54 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
             ] else ...[
               TextField(
                 controller: _textController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   hintText: 'Enter text or URL',
                 ),
               ),
             ],
 
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             // Generate QR Code button
             ElevatedButton(
               onPressed: () {
                 _generateQRCode();
               },
-              child: Text('Generate QR Code'),
+              child: const Text('Generate QR Code'),
             ),
 
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-            // Display QR Code
+
             if (qrData.isNotEmpty)
-              QrImageView(
-                data: qrData, // Correct 'data' parameter
-                version: QrVersions.auto,
-                size: 200.0,
+              Container(
+                padding: const EdgeInsets.all(16.0),
+                
+                decoration: BoxDecoration(
+                  border: Border.all(color: qrColor),
+                  color: Colors.white,
+                ),
+                child: QrImageView(
+                  data: qrData, // Correct 'data' parameter
+                  version: QrVersions.auto,
+                  size: 200.0,
+                ),
               ),
+
+            const SizedBox(height: 20),
+
+         
 
             // Save and Share Buttons
             if (qrData.isNotEmpty) ...[
               ElevatedButton(
                 onPressed: _saveQRCode,
-                child: Text('Save QR Code'),
+                child: const Text('Save QR Code'),
               ),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _shareQRCode,
-                child: Text('Share QR Code'),
+                child: const Text('Share QR Code'),
               ),
             ],
           ],
@@ -153,53 +173,56 @@ END:VCARD
     setState(() {});
   }
 
-  // Save QR Code as an image with white padding and centered QR code
-  Future<void> _saveQRCode() async {
-    final directory = await getApplicationDocumentsDirectory();
-    final path = '${directory.path}/qr_code.png';
+Future<void> _saveQRCode() async {
+  final directory = await getApplicationDocumentsDirectory();
+  final path = '${directory.path}/qr_code.png';
 
-    final qrValidationResult = QrValidator.validate(
-      data: qrData,
-      version: QrVersions.auto,
-      errorCorrectionLevel: QrErrorCorrectLevel.L,
+  final qrValidationResult = QrValidator.validate(
+    data: qrData,
+    version: QrVersions.auto,
+    errorCorrectionLevel: QrErrorCorrectLevel.L,
+  );
+
+  if (qrValidationResult.status == QrValidationStatus.valid) {
+    final brightness = Theme.of(context).brightness;
+    final qrColor = brightness == Brightness.dark ? Colors.white : Colors.black;
+    final qrBackgroundColor = brightness == Brightness.dark ? Colors.black : Colors.white;
+
+    final painter = QrPainter.withQr(
+      qr: qrValidationResult.qrCode!,
+      color: qrColor,
+      emptyColor: qrBackgroundColor,
+      gapless: true,
     );
 
-    if (qrValidationResult.status == QrValidationStatus.valid) {
-      final painter = QrPainter.withQr(
-        qr: qrValidationResult.qrCode!,
-        color: const Color(0xFF000000),
-        emptyColor: const Color(0xFFFFFFFF),
-        gapless: true,
-      );
+    final pictureRecorder = PictureRecorder();
+    const double qrSize = 200.0;
+    const double padding = 40.0; // White padding around the QR code
+    final canvas = Canvas(pictureRecorder);
 
-      final pictureRecorder = PictureRecorder();
-      const double qrSize = 200.0;
-      const double padding = 40.0; // White padding around the QR code
-      final canvas = Canvas(pictureRecorder);
+    // Draw background with padding
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, qrSize + padding * 2, qrSize + padding * 2),
+      Paint()..color = qrBackgroundColor,
+    );
 
-      // Draw white background with padding
-      canvas.drawRect(
-        Rect.fromLTWH(0, 0, qrSize + padding * 2, qrSize + padding * 2),
-        Paint()..color = Colors.white,
-      );
+    // Center the QR code within the padding
+    canvas.translate(padding, padding);
 
-      // Move the canvas to the center the QR code within the white padding
-      canvas.translate(padding, padding);
+    // Draw the QR code on the canvas
+    painter.paint(canvas, Size(qrSize, qrSize));
 
-      // Draw the QR code on the canvas, now it will be centered
-      painter.paint(canvas, Size(qrSize, qrSize));
-
-      final picture = pictureRecorder.endRecording();
-      final image = await picture.toImage(
-        (qrSize + padding * 2).toInt(),
-        (qrSize + padding * 2).toInt(),
-      );
-      final byteData = await image.toByteData(format: ImageByteFormat.png);
-      final buffer = byteData!.buffer.asUint8List();
-      final file = File(path);
-      await file.writeAsBytes(buffer);
-    }
+    final picture = pictureRecorder.endRecording();
+    final image = await picture.toImage(
+      (qrSize + padding * 2).toInt(),
+      (qrSize + padding * 2).toInt(),
+    );
+    final byteData = await image.toByteData(format: ImageByteFormat.png);
+    final buffer = byteData!.buffer.asUint8List();
+    final file = File(path);
+    await file.writeAsBytes(buffer);
   }
+}
 
   // Share QR Code with white padding and centered QR code
   Future<void> _shareQRCode() async {
@@ -227,7 +250,7 @@ END:VCARD
 
       // Draw white background with padding
       canvas.drawRect(
-        Rect.fromLTWH(0, 0, qrSize + padding * 2, qrSize + padding * 2),
+        const Rect.fromLTWH(0, 0, qrSize + padding * 2, qrSize + padding * 2),
         Paint()..color = Colors.white,
       );
 
@@ -235,7 +258,7 @@ END:VCARD
       canvas.translate(padding, padding);
 
       // Draw the QR code on the canvas, now it will be centered
-      painter.paint(canvas, Size(qrSize, qrSize));
+      painter.paint(canvas, const Size(qrSize, qrSize));
 
       final picture = pictureRecorder.endRecording();
       final image = await picture.toImage(
