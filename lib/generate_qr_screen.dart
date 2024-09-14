@@ -133,11 +133,11 @@ END:VCARD
     setState(() {});
   }
 
-  // Save QR Code as an image
+    // Save QR Code as an image with white padding and centered QR code
   Future<void> _saveQRCode() async {
     final directory = await getApplicationDocumentsDirectory();
     final path = '${directory.path}/qr_code.png';
-    
+
     final qrValidationResult = QrValidator.validate(
       data: qrData,
       version: QrVersions.auto,
@@ -151,11 +151,29 @@ END:VCARD
         emptyColor: const Color(0xFFFFFFFF),
         gapless: true,
       );
+
       final pictureRecorder = PictureRecorder();
+      const double qrSize = 200.0;
+      const double padding = 40.0; // White padding around the QR code
       final canvas = Canvas(pictureRecorder);
-      painter.paint(canvas, const Size(200, 200));
+
+      // Draw white background with padding
+      canvas.drawRect(
+        Rect.fromLTWH(0, 0, qrSize + padding * 2, qrSize + padding * 2),
+        Paint()..color = Colors.white,
+      );
+
+      // Move the canvas to the center the QR code within the white padding
+      canvas.translate(padding, padding);
+
+      // Draw the QR code on the canvas, now it will be centered
+      painter.paint(canvas, Size(qrSize, qrSize));
+
       final picture = pictureRecorder.endRecording();
-      final image = await picture.toImage(200, 200);
+      final image = await picture.toImage(
+        (qrSize + padding * 2).toInt(),
+        (qrSize + padding * 2).toInt(),
+      );
       final byteData = await image.toByteData(format: ImageByteFormat.png);
       final buffer = byteData!.buffer.asUint8List();
       final file = File(path);
@@ -163,7 +181,7 @@ END:VCARD
     }
   }
 
-  // Share QR Code
+  // Share QR Code with white padding and centered QR code
   Future<void> _shareQRCode() async {
     final directory = await getApplicationDocumentsDirectory();
     final path = '${directory.path}/qr_code.png';
@@ -181,11 +199,29 @@ END:VCARD
         emptyColor: const Color(0xFFFFFFFF),
         gapless: true,
       );
+
       final pictureRecorder = PictureRecorder();
+      const double qrSize = 200.0;
+      const double padding = 40.0; // White padding around the QR code
       final canvas = Canvas(pictureRecorder);
-      painter.paint(canvas, const Size(200, 200));
+
+      // Draw white background with padding
+      canvas.drawRect(
+        Rect.fromLTWH(0, 0, qrSize + padding * 2, qrSize + padding * 2),
+        Paint()..color = Colors.white,
+      );
+
+      // Move the canvas to center the QR code within the white padding
+      canvas.translate(padding, padding);
+
+      // Draw the QR code on the canvas, now it will be centered
+      painter.paint(canvas, Size(qrSize, qrSize));
+
       final picture = pictureRecorder.endRecording();
-      final image = await picture.toImage(200, 200);
+      final image = await picture.toImage(
+        (qrSize + padding * 2).toInt(),
+        (qrSize + padding * 2).toInt(),
+      );
       final byteData = await image.toByteData(format: ImageByteFormat.png);
       final buffer = byteData!.buffer.asUint8List();
       final file = File(path);
@@ -195,4 +231,5 @@ END:VCARD
       await Share.shareFiles([path], text: 'Here is your generated QR Code');
     }
   }
+
 }
