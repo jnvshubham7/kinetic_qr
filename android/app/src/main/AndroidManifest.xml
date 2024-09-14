@@ -6,7 +6,7 @@
 
 
     <application
-        android:label="kinetic_qr"
+        android:label="KineticQR"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         
