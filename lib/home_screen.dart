@@ -1,5 +1,7 @@
 
 import 'package:flutter/material.dart';
+import 'package:kinetic_qr/generate_qr_screen.dart';
+import 'package:kinetic_qr/scan_qr_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   @override
