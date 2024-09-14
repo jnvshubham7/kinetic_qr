@@ -123,17 +123,27 @@ class _ScanQRScreenState extends State<ScanQRScreen> with TickerProviderStateMix
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 10),
-                if (qrText != null && Uri.tryParse(qrText!)?.hasAbsolutePath == true) ...[
-                  Text(
-                    qrText!,
-                    style: TextStyle(fontSize: 18, color: Colors.blue),
-                    softWrap: true,
+                if (qrText != null && _isValidUrl(qrText!)) ...[
+                  GestureDetector(
+                    onTap: () async {
+                      final url = Uri.parse(qrText!);
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url);
+                      } else {
+                        _showSnackBar(context, "Could not open the link.");
+                      }
+                    },
+                    child: Text(
+                      qrText!,
+                      style: TextStyle(fontSize: 18, color: Colors.blue, decoration: TextDecoration.underline),
+                    ),
                   ),
                   SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: () async {
-                      if (await canLaunch(qrText!)) {
-                        await launch(qrText!);
+                      final url = Uri.parse(qrText!);
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url);
                       } else {
                         _showSnackBar(context, "Could not open the link.");
                       }
@@ -166,6 +176,12 @@ class _ScanQRScreenState extends State<ScanQRScreen> with TickerProviderStateMix
         ),
       ),
     );
+  }
+
+  // Check if the scanned data is a valid URL
+  bool _isValidUrl(String url) {
+    Uri? uri = Uri.tryParse(url);
+    return uri != null && uri.hasScheme && (uri.scheme == 'http' || uri.scheme == 'https');
   }
 
   // Helper to show snackbar messages
