@@ -141,7 +141,8 @@ void _onQRViewCreated(QRViewController controller) {
       setState(() {
         isScanning = false;
         isResultAvailable = true;
-        qrText = scanData.code;
+       qrText = scanData.code ?? scanData.rawBytes?.toString();
+
       });
       controller.pauseCamera();
 
