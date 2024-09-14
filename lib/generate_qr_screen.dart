@@ -1,9 +1,14 @@
 import 'dart:ui';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:path/path.dart' as path;
+
+var logger = Logger();
 
 class GenerateQRScreen extends StatefulWidget {
   @override
@@ -136,7 +141,9 @@ final qrBackgroundColor = brightness == Brightness.dark ? Colors.black : Colors.
             // Save and Share Buttons
             if (qrData.isNotEmpty) ...[
               ElevatedButton(
-                onPressed: _saveQRCode,
+                onPressed: () {
+                  _saveQRCode(context, qrData);
+                },
                 child: const Text('Save QR Code'),
               ),
               const SizedBox(height: 20),
@@ -175,10 +182,20 @@ END:VCARD
     setState(() {});
   }
 
-Future<void> _saveQRCode() async {
-  final directory = await getApplicationDocumentsDirectory();
-  final path = '${directory.path}/qr_code.png';
+Future<void> _saveQRCode(BuildContext context, String qrData) async {
+  String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
 
+  // If the user didn't select a directory, return early.
+  if (selectedDirectory == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('No directory selected'),
+      ),
+    );
+    return;
+  }
+
+  final savePath = path.join(selectedDirectory, 'qr_code.png');
   final qrValidationResult = QrValidator.validate(
     data: qrData,
     version: QrVersions.auto,
@@ -221,18 +238,17 @@ Future<void> _saveQRCode() async {
     );
     final byteData = await image.toByteData(format: ImageByteFormat.png);
     final buffer = byteData!.buffer.asUint8List();
-    final file = File(path);
+    final file = File(savePath);
     await file.writeAsBytes(buffer);
 
     // Show SnackBar after saving the file
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('QR Code saved successfully!'),
+        content: Text('QR Code saved successfully at $savePath!'),
       ),
     );
   }
 }
-
 
   // Share QR Code with white padding and centered QR code
   Future<void> _shareQRCode() async {
