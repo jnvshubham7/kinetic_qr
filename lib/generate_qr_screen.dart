@@ -194,8 +194,24 @@ Future<void> _saveQRCode(BuildContext context, String qrData) async {
     );
     return;
   }
+  String getUniqueFileName(String directory, String baseName, String extension) {
+    int count = 1;
+    String fileName = '$baseName.$extension';
+    String fullPath = path.join(directory, fileName);
 
-  final savePath = path.join(selectedDirectory, 'qr_code.png');
+    // Check if file already exists, if so, increment the file name
+    while (File(fullPath).existsSync()) {
+      fileName = '$baseName $count.$extension';
+      fullPath = path.join(directory, fileName);
+      count++;
+    }
+
+    return fullPath; // Return unique file path
+  }
+
+  // Get the unique file name for saving the QR code
+  final savePath = getUniqueFileName(selectedDirectory, 'qr_image', 'png');
+
   final qrValidationResult = QrValidator.validate(
     data: qrData,
     version: QrVersions.auto,
@@ -203,16 +219,12 @@ Future<void> _saveQRCode(BuildContext context, String qrData) async {
   );
 
   if (qrValidationResult.status == QrValidationStatus.valid) {
-    final brightness = Theme.of(context).brightness;
-    final qrColor = brightness == Brightness.dark ? Colors.white : Colors.black;
-    final qrBackgroundColor = brightness == Brightness.dark ? Colors.black : Colors.white;
-
-    final painter = QrPainter.withQr(
-      qr: qrValidationResult.qrCode!,
-      color: qrColor,
-      emptyColor: qrBackgroundColor,
-      gapless: true,
-    );
+  final painter = QrPainter.withQr(
+        qr: qrValidationResult.qrCode!,
+        color: const Color(0xFF000000),
+        emptyColor: const Color(0xFFFFFFFF),
+        gapless: true,
+      );
 
     final pictureRecorder = PictureRecorder();
     const double qrSize = 200.0;
@@ -222,7 +234,7 @@ Future<void> _saveQRCode(BuildContext context, String qrData) async {
     // Draw background with padding
     canvas.drawRect(
       Rect.fromLTWH(0, 0, qrSize + padding * 2, qrSize + padding * 2),
-      Paint()..color = qrBackgroundColor,
+      Paint()..color =  Colors.white,
     );
 
     // Center the QR code within the padding
