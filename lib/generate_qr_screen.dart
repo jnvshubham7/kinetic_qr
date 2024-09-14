@@ -11,11 +11,15 @@ class GenerateQRScreen extends StatefulWidget {
 }
 
 class _GenerateQRScreenState extends State<GenerateQRScreen> {
+  final TextEditingController _fullNameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+
   final TextEditingController _textController = TextEditingController();
   String qrData = '';
   String selectedType = 'Text';
   final List<String> dataTypes = ['URL', 'Text', 'vCard', 'Wi-Fi'];
-  
+
   final TextEditingController _ssidController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
@@ -42,7 +46,7 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
                 );
               }).toList(),
             ),
-            
+
             // Input fields based on selected type
             if (selectedType == 'Wi-Fi') ...[
               TextField(
@@ -59,11 +63,26 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
               ),
             ] else if (selectedType == 'vCard') ...[
               // For simplicity, using a single input for vCard. In a full app, you'd have multiple inputs.
+
               TextField(
-                controller: _textController,
+                controller: _fullNameController,
                 decoration: InputDecoration(
-                  hintText: 'Enter vCard information',
+                  labelText: 'Full Name',
                 ),
+              ),
+              TextField(
+                controller: _phoneController,
+                decoration: InputDecoration(
+                  labelText: 'Phone Number',
+                ),
+                keyboardType: TextInputType.phone,
+              ),
+              TextField(
+                controller: _emailController,
+                decoration: InputDecoration(
+                  labelText: 'Email Address',
+                ),
+                keyboardType: TextInputType.emailAddress,
               ),
             ] else ...[
               TextField(
@@ -115,17 +134,18 @@ class _GenerateQRScreenState extends State<GenerateQRScreen> {
   void _generateQRCode() {
     if (selectedType == 'Wi-Fi') {
       // Format Wi-Fi QR Code data
-      qrData = 'WIFI:S:${_ssidController.text};T:WPA;P:${_passwordController.text};;';
+      qrData =
+          'WIFI:S:${_ssidController.text};T:WPA;P:${_passwordController.text};;';
     } else if (selectedType == 'vCard') {
-      // Simplified vCard data for QR Code
+      // Format vCard QR Code data with user input
       qrData = '''
 BEGIN:VCARD
 VERSION:3.0
-FN:John Doe
-TEL:+1234567890
-EMAIL:john.doe@example.com
+FN:${_fullNameController.text}
+TEL:${_phoneController.text}
+EMAIL:${_emailController.text}
 END:VCARD
-      ''';
+    ''';
     } else {
       // Use text or URL directly
       qrData = _textController.text;
@@ -133,7 +153,7 @@ END:VCARD
     setState(() {});
   }
 
-    // Save QR Code as an image with white padding and centered QR code
+  // Save QR Code as an image with white padding and centered QR code
   Future<void> _saveQRCode() async {
     final directory = await getApplicationDocumentsDirectory();
     final path = '${directory.path}/qr_code.png';
@@ -231,5 +251,4 @@ END:VCARD
       await Share.shareFiles([path], text: 'Here is your generated QR Code');
     }
   }
-
 }
