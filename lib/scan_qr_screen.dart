@@ -1,26 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class ScanQRScreen extends StatefulWidget {
   @override
   State<StatefulWidget> createState() => _ScanQRScreenState();
 }
 
-class _ScanQRScreenState extends State<ScanQRScreen>
-    with TickerProviderStateMixin {
+class _ScanQRScreenState extends State<ScanQRScreen> with TickerProviderStateMixin {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   QRViewController? controller;
-  String? qrText; // To hold the final result
-  bool isScanning = true; // Flag to check if scanning is in progress
-  bool isResultAvailable = false; // To track if a result is available
+  String? qrText;
+  bool isScanning = true;
+  bool isResultAvailable = false;
   late AnimationController _animationController;
 
   @override
   void initState() {
     super.initState();
-
-    // Animation for scanning line
     _animationController = AnimationController(
       vsync: this,
       duration: Duration(seconds: 2),
@@ -29,10 +29,7 @@ class _ScanQRScreenState extends State<ScanQRScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Detect if the app is in light or dark mode
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    // Define styles for light and dark mode
     final boxDecoration = BoxDecoration(
       border: Border.all(
           color: isDarkMode ? Colors.tealAccent : Colors.blueAccent, width: 4),
@@ -47,19 +44,17 @@ class _ScanQRScreenState extends State<ScanQRScreen>
         ),
       ],
     );
-
     final scanningLineColor = isDarkMode ? Colors.tealAccent : Colors.blueAccent;
     final textStyle = TextStyle(
       fontSize: 18,
       color: isDarkMode ? Colors.tealAccent.shade400 : Colors.blueAccent.shade400,
     );
-
     final appBarColor = isDarkMode ? Colors.black : Colors.blue;
 
     return Scaffold(
       appBar: AppBar(
         title: Text('Scan QR Code'),
-        backgroundColor: appBarColor, // Use color based on theme
+        backgroundColor: appBarColor,
       ),
       body: Stack(
         children: [
@@ -73,16 +68,15 @@ class _ScanQRScreenState extends State<ScanQRScreen>
                       Center(
                         child: Container(
                           alignment: Alignment.center,
-                          width: 250, // Set the width of the scanning box
-                          height: 250, // Set the height of the scanning box
-                          decoration: boxDecoration, // Custom box decoration
+                          width: 250,
+                          height: 250,
+                          decoration: boxDecoration,
                           child: QRView(
                             key: qrKey,
                             onQRViewCreated: _onQRViewCreated,
                           ),
                         ),
                       ),
-                      // Scanning animation: A glowing line moving up and down
                       Positioned.fill(
                         child: Align(
                           alignment: Alignment.center,
@@ -126,42 +120,45 @@ class _ScanQRScreenState extends State<ScanQRScreen>
                   child: Center(
                     child: Text(
                       'Align the QR code within the frame',
-                      style: textStyle, // Custom text style
+                      style: textStyle,
                     ),
                   ),
                 ),
               ],
             ),
           ] else if (isResultAvailable) ...[
-            _buildResultView(isDarkMode), // Show the result in a well-formatted view
+            _buildResultView(isDarkMode),
           ],
         ],
       ),
     );
   }
 
-  // Method to handle QR View creation and scanning
-  void _onQRViewCreated(QRViewController controller) {
-    this.controller = controller;
-    controller.scannedDataStream.listen((scanData) {
-      if (!isResultAvailable) {
-        // Stop the scanning and process the first result
-        setState(() {
-          isScanning = false;
-          isResultAvailable = true;
-          qrText = scanData.code;
-        });
+void _onQRViewCreated(QRViewController controller) {
+  this.controller = controller;
+  controller.scannedDataStream.listen((scanData) async {
+    if (!isResultAvailable) {
+      setState(() {
+        isScanning = false;
+        isResultAvailable = true;
+        qrText = scanData.code;
+      });
+      controller.pauseCamera();
 
-        // Stop camera preview to avoid further scanning
-        controller.pauseCamera();
+      // Call the validation method to check if the URL is harmful
+      bool isSafe = await _isValidUrl(qrText!);
+      if (!isSafe) {
+        _showSnackBar(context, "Warning: The scanned URL is potentially harmful!");
       }
-    });
-  }
+    }
+  });
+}
 
-  // Build the view to display QR code result
+
   Widget _buildResultView(bool isDarkMode) {
     final cardColor = isDarkMode ? Colors.black54 : Colors.white;
-    final textColor = isDarkMode ? Colors.tealAccent : Colors.blueAccent;
+    final textColor = isDarkMode ? Colors.teal : Colors.blue;
+    final buttonColor = isDarkMode ? Colors.teal : Colors.blue;
 
     return Center(
       child: Padding(
@@ -171,12 +168,12 @@ class _ScanQRScreenState extends State<ScanQRScreen>
             borderRadius: BorderRadius.circular(12),
           ),
           elevation: 4,
-          color: cardColor, // Adjust color based on theme
+          color: cardColor,
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
                   'Scanned Result:',
@@ -187,7 +184,7 @@ class _ScanQRScreenState extends State<ScanQRScreen>
                   ),
                 ),
                 SizedBox(height: 10),
-                if (qrText != null && _isValidUrl(qrText!)) ...[
+                if (qrText != null) ...[
                   GestureDetector(
                     onTap: () async {
                       final url = Uri.parse(qrText!);
@@ -201,8 +198,9 @@ class _ScanQRScreenState extends State<ScanQRScreen>
                       qrText!,
                       style: TextStyle(
                           fontSize: 18,
-                          color: textColor,
-                          decoration: TextDecoration.underline),
+                          color: Colors.blue,
+                          decoration: TextDecoration.underline,
+                          decorationColor: Colors.blue),
                     ),
                   ),
                   SizedBox(height: 10),
@@ -215,9 +213,9 @@ class _ScanQRScreenState extends State<ScanQRScreen>
                         _showSnackBar(context, "Could not open the link.");
                       }
                     },
-                    child: Text('Open Link'),
+                    child: Text('Open Link', style: TextStyle(color: Colors.white)),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: textColor, // Adjust button color
+                      backgroundColor: buttonColor,
                     ),
                   ),
                 ] else if (qrText != null) ...[
@@ -225,7 +223,7 @@ class _ScanQRScreenState extends State<ScanQRScreen>
                     qrText!,
                     style: TextStyle(
                       fontSize: 18,
-                      color: textColor,
+                      color: Colors.blue,
                     ),
                     softWrap: true,
                   ),
@@ -233,7 +231,6 @@ class _ScanQRScreenState extends State<ScanQRScreen>
                 SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
-                    // Restart scanning
                     setState(() {
                       isResultAvailable = false;
                       isScanning = true;
@@ -241,9 +238,9 @@ class _ScanQRScreenState extends State<ScanQRScreen>
                     });
                     controller?.resumeCamera();
                   },
-                  child: Text('Scan Again'),
+                  child: Text('Scan Again', style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: textColor, // Adjust button color
+                    backgroundColor: buttonColor,
                   ),
                 ),
               ],
@@ -254,17 +251,32 @@ class _ScanQRScreenState extends State<ScanQRScreen>
     );
   }
 
-  // Check if the scanned data is a valid URL
-  bool _isValidUrl(String url) {
-    Uri? uri = Uri.tryParse(url);
-    return uri != null &&
-        uri.hasScheme &&
-        (uri.scheme == 'http' || uri.scheme == 'https');
+Future<bool> _isValidUrl(String url) async {
+  Uri? uri = Uri.tryParse(url);
+  if (uri == null || !uri.hasScheme || (uri.scheme != 'http' && uri.scheme != 'https')) {
+    return false;
   }
 
-  // Helper to show snackbar messages
+  try {
+    // Replace this with a valid API to check URLs or use OpenPhish data
+    final response = await http.get(Uri.parse('https://openphish.com/getphi.php'));
+    if (response.statusCode == 200) {
+      final jsonDecoded = jsonDecode(response.body);
+      // Assuming 'phish' key is 1 for phishing URLs in OpenPhish API
+      final isPhishing = jsonDecoded['phish'] == '1';
+      return !isPhishing;
+    }
+  } catch (e) {
+    print("Error checking URL: $e");
+  }
+
+  return true; // If no issues, assume the URL is safe
+}
+
+
   void _showSnackBar(BuildContext context, String message) {
-    final snackBar = SnackBar(content: Text(message));
+    final snackBar = SnackBar(content: Text(message), duration: Duration(seconds: 3));
+   
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
