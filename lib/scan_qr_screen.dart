@@ -7,7 +7,8 @@ class ScanQRScreen extends StatefulWidget {
   State<StatefulWidget> createState() => _ScanQRScreenState();
 }
 
-class _ScanQRScreenState extends State<ScanQRScreen> with TickerProviderStateMixin {
+class _ScanQRScreenState extends State<ScanQRScreen>
+    with TickerProviderStateMixin {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   QRViewController? controller;
   String? qrText; // To hold the final result
@@ -28,8 +29,38 @@ class _ScanQRScreenState extends State<ScanQRScreen> with TickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
+    // Detect if the app is in light or dark mode
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    // Define styles for light and dark mode
+    final boxDecoration = BoxDecoration(
+      border: Border.all(
+          color: isDarkMode ? Colors.tealAccent : Colors.blueAccent, width: 4),
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: [
+        BoxShadow(
+          color: isDarkMode
+              ? Colors.tealAccent.withOpacity(0.5)
+              : Colors.blueAccent.withOpacity(0.5),
+          spreadRadius: 2,
+          blurRadius: 10,
+        ),
+      ],
+    );
+
+    final scanningLineColor = isDarkMode ? Colors.tealAccent : Colors.blueAccent;
+    final textStyle = TextStyle(
+      fontSize: 18,
+      color: isDarkMode ? Colors.tealAccent.shade400 : Colors.blueAccent.shade400,
+    );
+
+    final appBarColor = isDarkMode ? Colors.black : Colors.blue;
+
     return Scaffold(
-      appBar: AppBar(title: Text('Scan QR Code')),
+      appBar: AppBar(
+        title: Text('Scan QR Code'),
+        backgroundColor: appBarColor, // Use color based on theme
+      ),
       body: Stack(
         children: [
           if (isScanning) ...[
@@ -39,11 +70,19 @@ class _ScanQRScreenState extends State<ScanQRScreen> with TickerProviderStateMix
                   flex: 5,
                   child: Stack(
                     children: [
-                      QRView(
-                        key: qrKey,
-                        onQRViewCreated: _onQRViewCreated,
+                      Center(
+                        child: Container(
+                          alignment: Alignment.center,
+                          width: 250, // Set the width of the scanning box
+                          height: 250, // Set the height of the scanning box
+                          decoration: boxDecoration, // Custom box decoration
+                          child: QRView(
+                            key: qrKey,
+                            onQRViewCreated: _onQRViewCreated,
+                          ),
+                        ),
                       ),
-                      // Scanning animation: a red line moving up and down
+                      // Scanning animation: A glowing line moving up and down
                       Positioned.fill(
                         child: Align(
                           alignment: Alignment.center,
@@ -51,11 +90,28 @@ class _ScanQRScreenState extends State<ScanQRScreen> with TickerProviderStateMix
                             animation: _animationController,
                             builder: (context, child) {
                               return Transform.translate(
-                                offset: Offset(0, _animationController.value * 200 - 100),
+                                offset: Offset(
+                                    0, _animationController.value * 200 - 100),
                                 child: Container(
                                   height: 2,
-                                  width: double.infinity,
-                                  color: Colors.red,
+                                  width: 200,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        scanningLineColor.withOpacity(0),
+                                        scanningLineColor,
+                                        scanningLineColor.withOpacity(0),
+                                      ],
+                                      stops: [0.1, 0.5, 0.9],
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: scanningLineColor,
+                                        blurRadius: 15,
+                                        spreadRadius: 2,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               );
                             },
@@ -69,15 +125,15 @@ class _ScanQRScreenState extends State<ScanQRScreen> with TickerProviderStateMix
                   flex: 1,
                   child: Center(
                     child: Text(
-                      'Scanning for QR code...',
-                      style: TextStyle(fontSize: 18, color: Colors.grey),
+                      'Align the QR code within the frame',
+                      style: textStyle, // Custom text style
                     ),
                   ),
                 ),
               ],
             ),
           ] else if (isResultAvailable) ...[
-            _buildResultView(), // Show the result in a well-formatted view
+            _buildResultView(isDarkMode), // Show the result in a well-formatted view
           ],
         ],
       ),
@@ -103,7 +159,10 @@ class _ScanQRScreenState extends State<ScanQRScreen> with TickerProviderStateMix
   }
 
   // Build the view to display QR code result
-  Widget _buildResultView() {
+  Widget _buildResultView(bool isDarkMode) {
+    final cardColor = isDarkMode ? Colors.black54 : Colors.white;
+    final textColor = isDarkMode ? Colors.tealAccent : Colors.blueAccent;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -112,6 +171,7 @@ class _ScanQRScreenState extends State<ScanQRScreen> with TickerProviderStateMix
             borderRadius: BorderRadius.circular(12),
           ),
           elevation: 4,
+          color: cardColor, // Adjust color based on theme
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -120,7 +180,11 @@ class _ScanQRScreenState extends State<ScanQRScreen> with TickerProviderStateMix
               children: [
                 Text(
                   'Scanned Result:',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                  ),
                 ),
                 SizedBox(height: 10),
                 if (qrText != null && _isValidUrl(qrText!)) ...[
@@ -135,7 +199,10 @@ class _ScanQRScreenState extends State<ScanQRScreen> with TickerProviderStateMix
                     },
                     child: Text(
                       qrText!,
-                      style: TextStyle(fontSize: 18, color: Colors.blue, decoration: TextDecoration.underline),
+                      style: TextStyle(
+                          fontSize: 18,
+                          color: textColor,
+                          decoration: TextDecoration.underline),
                     ),
                   ),
                   SizedBox(height: 10),
@@ -149,11 +216,17 @@ class _ScanQRScreenState extends State<ScanQRScreen> with TickerProviderStateMix
                       }
                     },
                     child: Text('Open Link'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: textColor, // Adjust button color
+                    ),
                   ),
                 ] else if (qrText != null) ...[
                   Text(
                     qrText!,
-                    style: TextStyle(fontSize: 18, color: Colors.black),
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: textColor,
+                    ),
                     softWrap: true,
                   ),
                 ],
@@ -169,6 +242,9 @@ class _ScanQRScreenState extends State<ScanQRScreen> with TickerProviderStateMix
                     controller?.resumeCamera();
                   },
                   child: Text('Scan Again'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: textColor, // Adjust button color
+                  ),
                 ),
               ],
             ),
@@ -181,7 +257,9 @@ class _ScanQRScreenState extends State<ScanQRScreen> with TickerProviderStateMix
   // Check if the scanned data is a valid URL
   bool _isValidUrl(String url) {
     Uri? uri = Uri.tryParse(url);
-    return uri != null && uri.hasScheme && (uri.scheme == 'http' || uri.scheme == 'https');
+    return uri != null &&
+        uri.hasScheme &&
+        (uri.scheme == 'http' || uri.scheme == 'https');
   }
 
   // Helper to show snackbar messages

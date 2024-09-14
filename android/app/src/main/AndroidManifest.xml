@@ -41,7 +41,7 @@
             <data android:mimeType="text/plain"/>
         </intent>
         
-        <!-- If your app checks for http and https support -->
+       
         <intent>
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="http"/>
