@@ -11,9 +11,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Kinetic QR',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      // dark mode 
+      darkTheme: ThemeData.dark(),
       home: WelcomeScreen(),
     );
   }
