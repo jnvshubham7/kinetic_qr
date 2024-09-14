@@ -68,8 +68,8 @@ class _ScanQRScreenState extends State<ScanQRScreen> with TickerProviderStateMix
                       Center(
                         child: Container(
                           alignment: Alignment.center,
-                          width: 250,
-                          height: 250,
+                          width: 300,
+                          height: 500,
                           decoration: boxDecoration,
                           child: QRView(
                             key: qrKey,
@@ -85,10 +85,10 @@ class _ScanQRScreenState extends State<ScanQRScreen> with TickerProviderStateMix
                             builder: (context, child) {
                               return Transform.translate(
                                 offset: Offset(
-                                    0, _animationController.value * 200 - 100),
+                                    0, _animationController.value * 300 - 150),
                                 child: Container(
-                                  height: 2,
-                                  width: 200,
+                                  height: 4,
+                                  width: 300,
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [

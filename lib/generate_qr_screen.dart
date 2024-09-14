@@ -38,6 +38,7 @@ final qrBackgroundColor = brightness == Brightness.dark ? Colors.black : Colors.
       appBar: AppBar(title: const Text('Generate QR Code')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
         child: Column(
           children: [
             // Dropdown to select QR Code type
@@ -147,6 +148,7 @@ final qrBackgroundColor = brightness == Brightness.dark ? Colors.black : Colors.
           ],
         ),
       ),
+      ),
     );
   }
 
@@ -221,8 +223,16 @@ Future<void> _saveQRCode() async {
     final buffer = byteData!.buffer.asUint8List();
     final file = File(path);
     await file.writeAsBytes(buffer);
+
+    // Show SnackBar after saving the file
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('QR Code saved successfully!'),
+      ),
+    );
   }
 }
+
 
   // Share QR Code with white padding and centered QR code
   Future<void> _shareQRCode() async {
