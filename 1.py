@@ -1,26 +1,51 @@
 import os
 
-# Folder path where your images are stored
-image_folder = r'D:\GitHub\kinetic_qr\screenshots'
+# Your GitHub repository URL
+repo_url = 'https://github.com/jnvshubham7/kinetic_qr/raw/main/screenshot/'
 
-# Path to the README file
-readme_file = 'README.md'
+# Path to the Screenshot folder
+screenshot_folder = 'screenshot'
+readme_path = 'README.md'
 
-# Image size definition for markdown (optional CSS styles can be used to control size)
-image_size = 'width="200"'
+# Check if the folder exists
+if not os.path.exists(screenshot_folder):
+    print(f"Folder '{screenshot_folder}' does not exist.")
+else:
+    # List all files in the Screenshot folder
+    files = os.listdir(screenshot_folder)
+    
+    # Filter out only image files (assuming png format) and sort them numerically
+    image_files = sorted([f for f in files if f.endswith('.png')], key=lambda x: int(os.path.splitext(x)[0].split('_')[1]))
 
-# Supported image extensions
-image_extensions = ['.png', '.jpg', '.jpeg', '.gif']
+    if not image_files:
+        print("No image files found in the Screenshot folder.")
+    else:
+        # Generate markdown for images
+        markdown_content = "<p float=\"left\">\n"
+        for image in image_files:
+            image_url = repo_url + '/' + image
+            markdown_content += f'  <img src="{image_url}" width="200" />\n'
+        markdown_content += "</p>\n"
 
-# Get all image files from the folder
-image_files = [f for f in os.listdir(image_folder) if os.path.splitext(f)[1].lower() in image_extensions]
+        # Read the current content of README.md
+        with open(readme_path, 'r') as readme_file:
+            readme_content = readme_file.readlines()
 
-# Open the README file in append mode
-with open(readme_file, 'a') as readme:
-    readme.write("\n## Screenshots\n")  # Add a title for the images section
-    for image in image_files:
-        image_path = os.path.join(image_folder, image)
-        # Add markdown for each image with custom size
-        readme.write(f'\n<img src="{image_path}" {image_size}>\n')
+        # Find the index to insert the screenshots section
+        start_index = -1
+        for i, line in enumerate(readme_content):
+            if line.strip() == "## Screenshots":
+                start_index = i
+                break
 
-print(f'Images have been added to {readme_file}')
+        # Insert the new markdown content for screenshots
+        if start_index != -1:
+            readme_content = readme_content[:start_index+1] + [markdown_content]
+
+            # Write the updated content back to README.md
+            with open(readme_path, 'w') as readme_file:
+                readme_file.writelines(readme_content)
+
+            print("README.md updated with new screenshots section.")
+        else:
+            print("Could not find '## Screenshots' section in README.md.")
