@@ -67,3 +67,23 @@ KineticQR is a Flutter application designed to simplify the process of scanning 
 
 - **Dark Mode**: Easily switch to dark mode for a more comfortable viewing experience in low light.
 - **Animations**: Add animations to enhance user interactions when scanning and generating QR codes.
+
+## Screenshots
+
+<p float="left">
+  <img src="https://github.com/jnvshubham7/kinetic_qr/raw/main/screenshot//flutter_01.png" width="200" />
+  <img src="https://github.com/jnvshubham7/kinetic_qr/raw/main/screenshot//flutter_03.png" width="200" />
+  <img src="https://github.com/jnvshubham7/kinetic_qr/raw/main/screenshot//flutter_04.png" width="200" />
+  <img src="https://github.com/jnvshubham7/kinetic_qr/raw/main/screenshot//flutter_05.png" width="200" />
+  <img src="https://github.com/jnvshubham7/kinetic_qr/raw/main/screenshot//flutter_06.png" width="200" />
+  <img src="https://github.com/jnvshubham7/kinetic_qr/raw/main/screenshot//flutter_07.png" width="200" />
+  <img src="https://github.com/jnvshubham7/kinetic_qr/raw/main/screenshot//flutter_08.png" width="200" />
+  <img src="https://github.com/jnvshubham7/kinetic_qr/raw/main/screenshot//flutter_09.png" width="200" />
+  <img src="https://github.com/jnvshubham7/kinetic_qr/raw/main/screenshot//flutter_10.png" width="200" />
+  <img src="https://github.com/jnvshubham7/kinetic_qr/raw/main/screenshot//flutter_11.png" width="200" />
+  <img src="https://github.com/jnvshubham7/kinetic_qr/raw/main/screenshot//flutter_12.png" width="200" />
+  <img src="https://github.com/jnvshubham7/kinetic_qr/raw/main/screenshot//flutter_12_1.png" width="200" />
+  <img src="https://github.com/jnvshubham7/kinetic_qr/raw/main/screenshot//flutter_13.png" width="200" />
+  <img src="https://github.com/jnvshubham7/kinetic_qr/raw/main/screenshot//flutter_14.png" width="200" />
+  <img src="https://github.com/jnvshubham7/kinetic_qr/raw/main/screenshot//flutter_15.png" width="200" />
+</p>
